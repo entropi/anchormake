@@ -4,16 +4,14 @@ import time
 from collections import namedtuple
 from enum import IntEnum
 from urllib import request
-from cryptography.hazmat.primitives import padding
-from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives import padding, serialization
 from cryptography.hazmat.primitives.asymmetric import ec
-from cryptography.hazmat.primitives.ciphers import Cipher
-from cryptography.hazmat.primitives.ciphers import algorithms
-from cryptography.hazmat.primitives.ciphers import modes
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
 _SERVER_PUBLIC_KEY = '04c5c00c4f8d1197cc7c3167c52bf7acb054d722f0ef08dcd7e0883236e0d72a3868d9750cb47fa4619248f3d83f0f662671dadc6e2d31c2f41db0161651c7c076'
 
 ApiResult = namedtuple("ApiResult", ["success", "data", "code", "msg"])
+
 
 class ReturnCode(IntEnum):
     SUCCESS = 0
@@ -157,7 +155,8 @@ class Client:
             response = request.urlopen(req)
             if response.status == 200:
                 response_data = json.loads(response.read().decode('utf-8'))
-                return ApiResult(response_data['code'] == 0, response_data['data'], response_data['code'], response_data['msg'])
+                return ApiResult(response_data['code'] == 0, response_data['data'], response_data['code'],
+                                 response_data['msg'])
 
         except Exception as e:
             print("AnkerMake Client getFDMList: Error fetching FDM printer list: " + str(e))
