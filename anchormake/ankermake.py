@@ -13,11 +13,7 @@ _SERVER_PUBLIC_KEY = '04c5c00c4f8d1197cc7c3167c52bf7acb054d722f0ef08dcd7e0883236
 ApiResult = namedtuple("ApiResult", ["success", "data", "code", "msg"])
 
 
-class ReturnCode(IntEnum):
-    SUCCESS = 0
-    INVALID_LOGIN = 26006
-    CAPTCHA_REQUIRED = 100032
-
+class _FuzzyIntEnum(IntEnum):
     @classmethod
     def _missing_(cls, value):
         if isinstance(value, int):
@@ -34,6 +30,30 @@ class ReturnCode(IntEnum):
             pseudo_member = cls._value2member_map_.setdefault(value, new_member)
         return pseudo_member
 
+
+class ReturnCode(_FuzzyIntEnum):
+    SUCCESS = 0
+    INVALID_LOGIN = 26006
+    CAPTCHA_REQUIRED = 100032
+
+
+class PrinterStatus(_FuzzyIntEnum):
+    READY = 0
+    PRINTING = 1
+    ERROR = 2  # This might be a generic error state code, or just for broken filament. That's where I saw it.
+    # I haven't seen 3 yet, PAUSED = 3 is the copilot guess, haha.
+    FINISHED = 4
+    AUTO_LEVELING = 5  # Also seen 7 at the beginning of leveling, that might be a pre-heating state, and just lagged?
+    # I haven't seen 6 yet
+    SOMETHING_ABOUT_AUTO_LEVELING = 7  # seen at the beginning of the auto-leveling process, before it changes to 5
+    HEATING = 8
+
+class FDMParamId(_FuzzyIntEnum):
+    PRINTER_STATUS = 957207
+    NOZZLE_TARGET_TEMP = 957209
+    BED_TARGET_TEMP = 957208
+    JOB_DETAILS = 957223
+    # PRINT_SPEED = 957210  # maybe, need to verify
 
 class Client:
 
@@ -133,18 +153,18 @@ class Client:
 
         return ApiResult(False, None, None, None)
 
-    def get_fdm_list(self) -> ApiResult:
+    def get_fdm_list(self, device_sn="", num=100, order_by="", page=0, station_sn="") -> ApiResult:
         """
 
         :rtype: ApiResult
         """
         try:
             req_data = dict(
-                device_sn="",
-                num=100,
-                orderby="",
-                page=0,
-                station_sn="",
+                device_sn=device_sn,
+                num=num,
+                orderby=order_by,
+                page=page,
+                station_sn=station_sn,
                 time_zone=time.localtime().tm_gmtoff
             )
             req = request.Request('https://make-app.ankermake.com/v1/app/query_fdm_list',
